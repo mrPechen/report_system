@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  db:
+    container_name: project_postgres
+    image: postgres:latest
+    env_file:
+      - .env
+    restart: always
+    ports:
+      - "5432:5432"
+    networks:
+      - project
+
+
+  drf:
+    container_name: project_drf
+    build:
+      context: .
+    command: >
+      sh -c "
+      python main.py migrate &&
+      python main.py makemigrations &&
+      python main.py create_users &&
+      python main.py runserver 0.0.0.0:8000 --noreload"
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    networks:
+      - project
+    restart: always
+    depends_on:
+      - db
+
+
+
+networks:
+    project:
+      driver: bridge
